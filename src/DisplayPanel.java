@@ -15,14 +15,25 @@ import java.io.IOException;
 public class DisplayPanel extends JPanel implements MouseListener, KeyListener, MouseMotionListener {
     private int score;
     private boolean yellowColor;
+    private boolean gameOver;
     private int knifeX;
     private int knifeY;
     private BufferedImage background;
     private BufferedImage knife;
+    private BufferedImage apple;
+    private BufferedImage banana;
+    private BufferedImage pineapple;
+    private BufferedImage garbage;
 
     public DisplayPanel() {
+        int randomApple = 0;
+        int randomBanana = 0;
+        int randomPineapple = 0;
+        int randomGarbage = 0;
+
         score = 0;
         yellowColor = true;
+        gameOver = false;
         knifeX = 0;
         knifeY = 0;
         try {
@@ -35,6 +46,27 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
+        try {
+            apple = ImageIO.read(new File("src/apple.png"));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        try {
+            banana = ImageIO.read(new File("src/banana.png"));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        try {
+            pineapple = ImageIO.read(new File("src/pineapple.png"));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        try {
+            garbage = ImageIO.read(new File("src/garbage.png"));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
         addMouseListener(this);
         addMouseMotionListener(this);
         addKeyListener(this);
@@ -56,6 +88,21 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             g.setColor(Color.BLACK);
         }
         g.drawString("Score: " + score, 50, 30);
+
+        if (gameOver) {
+            g.setFont(new Font("Arial", Font.BOLD, 32));
+            if (score == 10) {
+                g.drawString("GAME OVER, YOU WIN!", 350, 240);
+            } else {
+                g.drawString("GAME OVER, YOU LOSE :(", 350, 240);
+            }
+        } else {
+            g.drawImage(knife, knifeX, knifeY, 960,580, null);
+            int randomApple = (int) (10 * Math.random());
+            for (int i = 1; i < randomApple; i++) {
+                g.drawImage(apple, 200, 470, null);
+            }
+        }
     }
 
     @Override
@@ -67,12 +114,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     public void mousePressed(MouseEvent e) { } // unimplemented
 
     @Override
-    public void mouseReleased(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            yellowColor = !yellowColor;
-            repaint();
-        }
-    }
+    public void mouseReleased(MouseEvent e) {}
 
     @Override
     public void mouseEntered(MouseEvent e) { } // unimplemented
@@ -84,7 +126,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     public void keyTyped(KeyEvent e) { } // unimplemented
 
     @Override
-    public void mouseMoved(MouseEvent e) {
+    public void mouseDragged(MouseEvent e) {
         knifeX = e.getX();
         knifeY = e.getY();
         try {
@@ -92,6 +134,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         } catch (IOException error) { }
         repaint();
     }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {}
 
     @Override
     public void keyPressed(KeyEvent e) {
