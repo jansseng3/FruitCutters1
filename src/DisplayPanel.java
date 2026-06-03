@@ -1,8 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
-import java.awt.Graphics;
-import java.awt.Font;
-import java.awt.Color;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -36,6 +34,10 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         gameOver = false;
         knifeX = 0;
         knifeY = 0;
+
+        int randomAppleX = 0;
+        int randomAppleY = 0;
+
         try {
             background = ImageIO.read(new File("src/kitchen.png"));
         } catch (IOException e) {
@@ -96,13 +98,18 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             } else {
                 g.drawString("GAME OVER, YOU LOSE :(", 350, 240);
             }
-        } else {
-            g.drawImage(knife, knifeX, knifeY, 960,580, null);
-            int randomApple = (int) (10 * Math.random());
-            for (int i = 1; i < randomApple; i++) {
-                g.drawImage(apple, 200, 470, null);
-            }
+        } else if (score < 100){
+            int randomApple = (int) (1 + (10 * Math.random()));
+            int randomAppleX = (int) (960 * Math.random());
+            int randomAppleY = (int) (580 * Math.random());
+            g.drawImage(apple, randomAppleX, randomAppleY, 100,100, null);;
+
+            int randomBananaX = (int) (960 * Math.random());
+            int randomBananaY = (int) (580 * Math.random());
+            g.drawImage(banana, randomBananaX, randomBananaY, 100,100, null);;
         }
+
+
     }
 
     @Override
@@ -159,4 +166,5 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
 
     @Override
     public void keyReleased(KeyEvent e) { }  // unimplemented
+
 }
