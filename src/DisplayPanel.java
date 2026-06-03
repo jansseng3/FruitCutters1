@@ -16,27 +16,36 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private boolean gameOver;
     private int knifeX;
     private int knifeY;
+
+    private int appleX;
+    private int appleY;
+
     private BufferedImage background;
     private BufferedImage knife;
     private BufferedImage apple;
     private BufferedImage banana;
     private BufferedImage pineapple;
     private BufferedImage garbage;
+    private boolean randomApple;
+    private boolean randomBanana;
+    private boolean randomPineapple;
+    private boolean randomGarbage;
 
     public DisplayPanel() {
-        int randomApple = 0;
-        int randomBanana = 0;
-        int randomPineapple = 0;
-        int randomGarbage = 0;
-
         score = 0;
         yellowColor = true;
         gameOver = false;
         knifeX = 0;
         knifeY = 0;
 
-        int randomAppleX = 0;
-        int randomAppleY = 0;
+        appleX = 0;
+        appleY = 0;
+
+        randomApple = true;
+        randomBanana = true;
+        randomPineapple = true;
+        randomGarbage = true;
+
 
         try {
             background = ImageIO.read(new File("src/kitchen.png"));
@@ -91,6 +100,7 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         }
         g.drawString("Score: " + score, 50, 30);
 
+
         if (gameOver) {
             g.setFont(new Font("Arial", Font.BOLD, 32));
             if (score == 10) {
@@ -99,14 +109,20 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
                 g.drawString("GAME OVER, YOU LOSE :(", 350, 240);
             }
         } else if (score < 100){
-            int randomApple = (int) (1 + (10 * Math.random()));
-            int randomAppleX = (int) (960 * Math.random());
-            int randomAppleY = (int) (580 * Math.random());
-            g.drawImage(apple, randomAppleX, randomAppleY, 100,100, null);;
 
-            int randomBananaX = (int) (960 * Math.random());
-            int randomBananaY = (int) (580 * Math.random());
-            g.drawImage(banana, randomBananaX, randomBananaY, 100,100, null);;
+            if (randomApple) {
+                int randomAppleX = (int) (960 * Math.random());
+                int randomAppleY = (int) (580 * Math.random());
+                g.drawImage(apple, randomAppleX, randomAppleY, 100,100, null);;
+            }
+
+            if (randomBanana) {
+                int randomBananaX = (int) (960 * Math.random());
+                int randomBananaY = (int) (580 * Math.random());
+                g.drawImage(banana, randomBananaX, randomBananaY, 100,100, null);;
+            }
+
+
         }
 
 
@@ -166,5 +182,25 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
 
     @Override
     public void keyReleased(KeyEvent e) { }  // unimplemented
+
+    private Rectangle knifeRectangle() {
+        int imageHeight = knife.getHeight();
+        int imageWidth = knife.getWidth();
+        Rectangle rect = new Rectangle(knifeX, knifeY, imageWidth, imageHeight);
+        return rect;
+    }
+
+    private Rectangle appleRectangle() {
+        int imageHeight = apple.getHeight();
+        int imageWidth = apple.getWidth();
+        Rectangle rect = new Rectangle(appleX, appleY, imageWidth, imageHeight);
+        return rect;
+    }
+
+    private boolean randomApple() {
+        Rectangle knifeRect = knifeRectangle();
+        Rectangle appleRect = appleRectangle();
+        return knifeRect.intersects(appleRect);
+    }
 
 }
