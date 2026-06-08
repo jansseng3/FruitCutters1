@@ -1,5 +1,5 @@
 import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -14,11 +14,9 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private int score;
     private boolean yellowColor;
     private boolean gameOver;
+
     private int knifeX;
     private int knifeY;
-
-    private int appleX;
-    private int appleY;
 
     private BufferedImage background;
     private BufferedImage knife;
@@ -26,10 +24,24 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     private BufferedImage banana;
     private BufferedImage pineapple;
     private BufferedImage garbage;
+
     private boolean randomApple;
     private boolean randomBanana;
     private boolean randomPineapple;
-    private boolean randomGarbage;
+
+    private int randomAppleX;
+    private int randomAppleY;
+    private int randomBananaX;
+    private int randomBananaY;
+    private int randomPineappleX;
+    private int randomPineappleY;
+
+    // Garbage bag tracking
+    private int garbageCount;
+    private int[][] garbagePositions; // each row is [x, y] for one bag
+
+    private Timer garbageSpawnTimer;   // fires every 1 second to move bags
+    private Timer garbageIncreaseTimer; // fires every 10 seconds to add a bag
 
     public DisplayPanel() {
         score = 0;
@@ -38,14 +50,21 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
         knifeX = 0;
         knifeY = 0;
 
-        appleX = 0;
-        appleY = 0;
-
         randomApple = true;
         randomBanana = true;
         randomPineapple = true;
-        randomGarbage = true;
 
+        randomAppleX = (int) (860 * Math.random());
+        randomAppleY = (int) (480 * Math.random());
+        randomBananaX = (int) (860 * Math.random());
+        randomBananaY = (int) (480 * Math.random());
+        randomPineappleX = (int) (860 * Math.random());
+        randomPineappleY = (int) (480 * Math.random());
+
+        // Start with 1 garbage bag
+        garbageCount = 1;
+        garbagePositions = new int[20][2]; // 20 bags max
+        spawnAllGarbage();
 
         try {
             background = ImageIO.read(new File("src/kitchen.png"));
@@ -63,11 +82,6 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             System.out.println(e.getMessage());
         }
         try {
-            banana = ImageIO.read(new File("src/banana.png"));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-        try {
             pineapple = ImageIO.read(new File("src/pineapple.png"));
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -78,75 +92,118 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
             System.out.println(e.getMessage());
         }
 
+        // Every 1 second: move all garbage bags to new random positions
+        garbageSpawnTimer = new Timer(1000, e -> {
+            if (!gameOver) {
+                spawnAllGarbage();
+                repaint();
+            }
+        });
+        garbageSpawnTimer.start();
+
+        // Every 10 seconds: add one more garbage bag
+        garbageIncreaseTimer = new Timer(10000, e -> {
+            if (!gameOver && garbageCount < 20) {
+                garbageCount++;
+                spawnAllGarbage();
+                repaint();
+            }
+        });
+        garbageIncreaseTimer.start();
+
         addMouseListener(this);
         addMouseMotionListener(this);
         addKeyListener(this);
-        setFocusable(true); // this line of code + one below makes this panel active for keylistener events
-        requestFocusInWindow(); // see comment above
+        setFocusable(true);
+        requestFocusInWindow();
+    }
+
+    // Randomizes positions for all active garbage bags
+    private void spawnAllGarbage() {
+        for (int i = 0; i < garbageCount; i++) {
+            garbagePositions[i][0] = (int) (860 * Math.random()); // x
+            garbagePositions[i][1] = (int) (480 * Math.random()); // y
+        }
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(background, 0, 0, 960,580, null);
-        g.drawImage(knife, knifeX, knifeY, 100,100, null);
+        g.drawImage(background, 0, 0, 960, 580, null);
+        g.drawImage(knife, knifeX, knifeY, 100, 100, null);
 
-        // set font and color of text
         g.setFont(new Font("Arial", Font.BOLD, 16));
-        if (yellowColor) {
-            g.setColor(Color.YELLOW);
-        } else {
-            g.setColor(Color.BLACK);
-        }
+        g.setColor(yellowColor ? Color.YELLOW : Color.BLACK);
         g.drawString("Score: " + score, 50, 30);
-
+        g.drawString("Avoid the garbage bags! Cut as many fruits as possible by clicking and dragging your cursor!", 50, 50);
 
         if (gameOver) {
             g.setFont(new Font("Arial", Font.BOLD, 32));
-            if (score == 10) {
-                g.drawString("GAME OVER, YOU WIN!", 350, 240);
-            } else {
-                g.drawString("GAME OVER, YOU LOSE :(", 350, 240);
-            }
-        } else if (score < 100){
-
+            g.drawString("GAME OVER, YOU LOSE :(", 270, 240);
+            g.drawString("Final Score: " + score, 360, 480);
+        } else if (gameOver != true) {
             if (randomApple) {
-                int randomAppleX = (int) (960 * Math.random());
-                int randomAppleY = (int) (580 * Math.random());
-                g.drawImage(apple, randomAppleX, randomAppleY, 100,100, null);;
+                g.drawImage(apple, randomAppleX, randomAppleY, 100, 100, null);
             }
-
             if (randomBanana) {
-                int randomBananaX = (int) (960 * Math.random());
-                int randomBananaY = (int) (580 * Math.random());
-                g.drawImage(banana, randomBananaX, randomBananaY, 100,100, null);;
+                g.drawImage(banana, randomBananaX, randomBananaY, 100, 100, null);
             }
-
-
+            if (randomPineapple) {
+                g.drawImage(pineapple, randomPineappleX, randomPineappleY, 100, 100, null);
+            }
+            // Draw all active garbage bags
+            for (int i = 0; i < garbageCount; i++) {
+                g.drawImage(garbage, garbagePositions[i][0], garbagePositions[i][1], 100, 100, null);
+            }
         }
-
-
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) { } // unimplemented
-    // unimplemented because if you move your mouse while clicking, this method isn't
-    // called, so mouseReleased is best
+    public void mouseClicked(MouseEvent e) { }
 
     @Override
-    public void mousePressed(MouseEvent e) { } // unimplemented
+    public void mousePressed(MouseEvent e) { }
 
     @Override
-    public void mouseReleased(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {
+        if (gameOver) return; // ignore clicks after game over
+
+        Rectangle knifeRect = knifeRectangle();
+
+        if (randomApple && knifeRect.intersects(appleRectangle())) {
+            score++;
+            randomAppleX = (int) (860 * Math.random());
+            randomAppleY = (int) (480 * Math.random());
+            repaint();
+        }
+
+        if (randomPineapple && knifeRect.intersects(pineappleRectangle())) {
+            score += 3;
+            randomPineappleX = (int) (860 * Math.random());
+            randomPineappleY = (int) (480 * Math.random());
+            repaint();
+        }
+        // Check each garbage bag for collision
+        for (int i = 0; i < garbageCount; i++) {
+            Rectangle garbageRect = new Rectangle(garbagePositions[i][0], garbagePositions[i][1], 100, 100);
+            if (knifeRect.intersects(garbageRect)) {
+                gameOver = true;
+                garbageSpawnTimer.stop();
+                garbageIncreaseTimer.stop();
+                repaint();
+                return;
+            }
+        }
+    }
 
     @Override
-    public void mouseEntered(MouseEvent e) { } // unimplemented
+    public void mouseEntered(MouseEvent e) { }
 
     @Override
-    public void mouseExited(MouseEvent e) { } // unimplemented
+    public void mouseExited(MouseEvent e) { }
 
     @Override
-    public void keyTyped(KeyEvent e) { } // unimplemented
+    public void keyTyped(KeyEvent e) { }
 
     @Override
     public void mouseDragged(MouseEvent e) {
@@ -159,19 +216,19 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     }
 
     @Override
-    public void mouseMoved(MouseEvent e) {}
+    public void mouseMoved(MouseEvent e) { }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_A) {  // A key; VK_A equals 65
+        if (keyCode == KeyEvent.VK_A) {
             knifeX -= 5;
             try {
                 knife = ImageIO.read(new File("src/knife.png"));
             } catch (IOException error) { }
             repaint();
         }
-        if (keyCode == KeyEvent.VK_D) {  // D key; VK_D equals 65
+        if (keyCode == KeyEvent.VK_D) {
             knifeX += 5;
             try {
                 knife = ImageIO.read(new File("src/knife.png"));
@@ -181,26 +238,17 @@ public class DisplayPanel extends JPanel implements MouseListener, KeyListener, 
     }
 
     @Override
-    public void keyReleased(KeyEvent e) { }  // unimplemented
+    public void keyReleased(KeyEvent e) { }
 
     private Rectangle knifeRectangle() {
-        int imageHeight = knife.getHeight();
-        int imageWidth = knife.getWidth();
-        Rectangle rect = new Rectangle(knifeX, knifeY, imageWidth, imageHeight);
-        return rect;
+        return new Rectangle(knifeX, knifeY, 100, 100);
     }
 
     private Rectangle appleRectangle() {
-        int imageHeight = apple.getHeight();
-        int imageWidth = apple.getWidth();
-        Rectangle rect = new Rectangle(appleX, appleY, imageWidth, imageHeight);
-        return rect;
+        return new Rectangle(randomAppleX, randomAppleY, 100, 100);
     }
 
-    private boolean randomApple() {
-        Rectangle knifeRect = knifeRectangle();
-        Rectangle appleRect = appleRectangle();
-        return knifeRect.intersects(appleRect);
+    private Rectangle pineappleRectangle() {
+        return new Rectangle(randomPineappleX, randomPineappleY, 100, 100);
     }
-
 }
